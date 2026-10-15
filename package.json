@@ -1,0 +1,13 @@
+{
+  "name": "simple-calculator",
+  "version": "1.0.0",
+  "description": "A simple calculator website built with TypeScript",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "start": "tsc && start index.html"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0"
+  }
+}

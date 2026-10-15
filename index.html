@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simple Calculator</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="calculator">
+      <div id="display" class="display" aria-live="polite">0</div>
+
+      <div id="keypad" class="keypad">
+        <!-- Row 1: controls -->
+        <button class="btn fn" data-action="clear">AC</button>
+        <button class="btn fn" data-action="backspace">DEL</button>
+        <button class="btn fn" data-action="percent">%</button>
+        <button class="btn fn" data-op="/">÷</button>
+
+        <!-- Row 2 -->
+        <button class="btn" data-digit="7">7</button>
+        <button class="btn" data-digit="8">8</button>
+        <button class="btn" data-digit="9">9</button>
+        <button class="btn fn" data-op="*">×</button>
+
+        <!-- Row 3 -->
+        <button class="btn" data-digit="4">4</button>
+        <button class="btn" data-digit="5">5</button>
+        <button class="btn" data-digit="6">6</button>
+        <button class="btn fn" data-op="-">−</button>
+
+        <!-- Row 4 -->
+        <button class="btn" data-digit="1">1</button>
+        <button class="btn" data-digit="2">2</button>
+        <button class="btn" data-digit="3">3</button>
+        <button class="btn fn" data-op="+">+</button>
+
+        <!-- Row 5 -->
+        <button class="btn" data-action="sign">±</button>
+        <button class="btn" data-digit="0">0</button>
+        <button class="btn" data-digit=".">.</button>
+        <button class="btn equals" data-action="equals">=</button>
+      </div>
+    </main>
+
+    <script src="dist/calculator.js" defer></script>
+  </body>
+</html>

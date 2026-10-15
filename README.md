@@ -9,10 +9,14 @@ A simple, dependency-free calculator website written in TypeScript.
 ## Features
 
 - Basic arithmetic: `+  - × ÷`
+- **The full expression stays visible** — pressing `+` after `2` shows `2 +`,
+  not a blank screen, so you always see what you are calculating
+- A secondary line shows the completed equation after `=`, e.g. `2 + 3 = 5`
 - Decimal arithmetic with floating-point cleanup (`0.1 + 0.2 = 0.3`)
 - Percentage, sign toggle (`±`), backspace (`DEL`), and clear (`AC`)
 - Divide-by-zero handled as `Error`
-- 14-digit display limit
+- 14-digit input limit; oversized results fall back to scientific notation
+- The display font auto-shrinks in stages so long expressions never clip
 - Full **keyboard support**: digits, `.`, `+ - * /`, `Enter`/`=` to evaluate,
   `Backspace` to delete, `Escape` to clear, `%` for percentage
 - Accessible: visible focus ring and `aria-live` display region
@@ -62,15 +66,28 @@ node serve.js      # then open http://localhost:3000
 
 ```ts
 interface CalculatorState {
-  display: string;
+  entry: string;                     // the number being typed, or the last result
   firstOperand: number | null;
   waitingForSecondOperand: boolean;
   operator: Operator | null;
+  lastEquation: string | null;       // the completed equation shown on the second line
+  justEvaluated: boolean;            // so the next digit starts a new calculation
 }
 ```
 
 Every input (button click or keypress) mutates the state through a small pure
 function (`inputDigit`, `handleOperator`, `calculate`, …) and then calls
-`render()` to write `state.display` to the DOM. Operators apply immediately to
-the pending result so `2 + 3 × 4 =` evaluates left-to-right, matching the
-behaviour of a basic handheld calculator.
+`render()`. Operators apply immediately to the pending result so
+`2 + 3 × 4 =` evaluates left-to-right, matching a basic handheld calculator.
+
+The visible text is derived rather than stored — `displayText()` builds
+`"2 + 3"` from the pending operator and operand, so the earlier number is never
+lost. `render()` also picks a font-size tier from the resulting string length
+so long expressions shrink instead of overflowing.
+
+## Toolchain
+
+Built with **TypeScript 7.0.2**, pinned to an exact version in `package.json`
+so local and CI builds emit byte-identical output. The CI workflow rebuilds
+`dist/` and diffs it against the committed copy, which fails the build if the
+generated code ever drifts out of sync with the source.

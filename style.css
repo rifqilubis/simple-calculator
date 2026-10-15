@@ -32,21 +32,48 @@ body {
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45);
 }
 
-.display {
+.screen {
   background: var(--display-bg);
-  color: var(--text);
-  font-size: clamp(2.5rem, 12vw, 3.5rem);
-  font-weight: 300;
-  text-align: right;
-  padding: 20px 16px;
   border-radius: 16px;
   margin-bottom: 18px;
-  min-height: 92px;
+  padding: 14px 16px;
+  min-height: 132px;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: flex-end;
+  gap: 4px;
   overflow: hidden;
-  word-break: break-all;
+}
+
+.equation {
+  color: var(--text-dim);
+  font-size: 1rem;
+  font-weight: 400;
+  text-align: right;
+  min-height: 1.25em;
+  /* Wrap at spaces so a long completed equation is never truncated. */
+  overflow-wrap: normal;
+}
+
+.display {
+  color: var(--text);
+  font-size: clamp(2.25rem, 10vw, 3.25rem);
+  font-weight: 300;
+  text-align: right;
+  line-height: 1.15;
+  min-height: 1.15em;
+  /* Wrap at spaces only — never split a number across lines. */
+  overflow-wrap: normal;
+}
+
+/* Keeps long expressions such as "12 + 34 = 46" fully visible. */
+.display.compact {
+  font-size: clamp(1.5rem, 6.5vw, 2.1rem);
+}
+
+/* Longest possible expression: "12345678901234 + 12345678901234". */
+.display.compact-xs {
+  font-size: clamp(1rem, 4.6vw, 1.5rem);
 }
 
 .keypad {

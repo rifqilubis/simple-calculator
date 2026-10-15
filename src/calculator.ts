@@ -1,6 +1,10 @@
 /**
  * Simple Calculator — application logic.
  *
+ * The display shows the in-progress expression (e.g. "2 + 3") rather than
+ * just the number being typed, so the operand never disappears when you
+ * press an operator.
+ *
  * Everything is wrapped in an IIFE so no identifiers leak into the global
  * scope, while still allowing the compiled output to load as a plain
  * `<script>` (so `index.html` works when opened directly from disk).
@@ -9,24 +13,65 @@
   type Operator = "+" | "-" | "*" | "/";
 
   interface CalculatorState {
-    display: string;
+    /** The number currently being typed, or the last result. */
+    entry: string;
     firstOperand: number | null;
     waitingForSecondOperand: boolean;
     operator: Operator | null;
+    /** The completed equation shown on the small secondary line. */
+    lastEquation: string | null;
+    /** True right after "=", so the next digit starts a new calculation. */
+    justEvaluated: boolean;
   }
 
+  const SYMBOLS: Record<Operator, string> = {
+    "+": "+",
+    "-": "−",
+    "*": "×",
+    "/": "÷",
+  };
+
   const state: CalculatorState = {
-    display: "0",
+    entry: "0",
     firstOperand: null,
     waitingForSecondOperand: false,
     operator: null,
+    lastEquation: null,
+    justEvaluated: false,
   };
 
   const displayEl = document.querySelector("#display") as HTMLElement;
+  const equationEl = document.querySelector("#equation") as HTMLElement;
   const keypadEl = document.querySelector("#keypad") as HTMLElement;
 
+  /** Build the expression shown on the main display. */
+  function displayText(): string {
+    if (state.operator !== null && state.firstOperand !== null) {
+      const symbol = SYMBOLS[state.operator];
+      const left = formatOperand(state.firstOperand);
+      return state.waitingForSecondOperand
+        ? `${left} ${symbol}`
+        : `${left} ${symbol} ${state.entry}`;
+    }
+    return state.entry;
+  }
+
   function render(): void {
-    displayEl.textContent = state.display;
+    const text = displayText();
+    displayEl.textContent = text;
+    // Shrink the font in stages so long expressions are never clipped.
+    const length = text.length;
+    displayEl.classList.toggle("compact", length > 12 && length <= 20);
+    displayEl.classList.toggle("compact-xs", length > 20);
+    equationEl.textContent = state.lastEquation ?? "";
+  }
+
+  /** Render a stored operand compactly so long results stay legible. */
+  function formatOperand(value: number): string {
+    if (!isFinite(value)) return "Error";
+    const str = String(value);
+    if (str.replace(/[-.]/g, "").length <= 12) return str;
+    return String(Number(value.toPrecision(8)));
   }
 
   /** Avoid floating-point noise (e.g. 0.1 + 0.2 -> 0.3) and cap the length. */
@@ -44,23 +89,35 @@
   }
 
   function inputDigit(digit: string): void {
+    if (state.justEvaluated) {
+      // Start a fresh calculation after "=".
+      state.entry = digit;
+      state.justEvaluated = false;
+      return;
+    }
+
     if (state.waitingForSecondOperand) {
-      state.display = digit;
+      state.entry = digit;
       state.waitingForSecondOperand = false;
       return;
     }
 
-    if (state.display.replace(/[-.]/g, "").length >= 14) return;
-    state.display = state.display === "0" ? digit : state.display + digit;
+    if (state.entry.replace(/[-.]/g, "").length >= 14) return;
+    state.entry = state.entry === "0" ? digit : state.entry + digit;
   }
 
   function inputDecimal(): void {
+    if (state.justEvaluated) {
+      state.entry = "0.";
+      state.justEvaluated = false;
+      return;
+    }
     if (state.waitingForSecondOperand) {
-      state.display = "0.";
+      state.entry = "0.";
       state.waitingForSecondOperand = false;
       return;
     }
-    if (!state.display.includes(".")) state.display += ".";
+    if (!state.entry.includes(".")) state.entry += ".";
   }
 
   function calculate(first: number, second: number, op: Operator): number {
@@ -77,50 +134,62 @@
   }
 
   function handleOperator(nextOperator: Operator): void {
-    const inputValue = parseFloat(state.display);
+    const current = parseFloat(state.entry);
 
     if (state.operator !== null && !state.waitingForSecondOperand) {
-      const result = calculate(state.firstOperand ?? 0, inputValue, state.operator);
-      state.display = formatResult(result);
+      // Chain: apply the pending operation before switching operator.
+      const result = calculate(state.firstOperand ?? 0, current, state.operator);
+      state.entry = formatResult(result);
     }
 
-    state.firstOperand = parseFloat(state.display);
+    state.firstOperand = parseFloat(state.entry);
     state.operator = nextOperator;
     state.waitingForSecondOperand = true;
+    state.justEvaluated = false;
   }
 
   function handleEquals(): void {
     if (state.operator === null || state.firstOperand === null) return;
 
-    const result = calculate(state.firstOperand, parseFloat(state.display), state.operator);
-    state.display = formatResult(result);
+    const right = parseFloat(state.entry);
+    const result = calculate(state.firstOperand, right, state.operator);
+    const formatted = formatResult(result);
+
+    state.lastEquation =
+      `${formatOperand(state.firstOperand)} ${SYMBOLS[state.operator]} ` +
+      `${formatOperand(right)} = ${formatted}`;
+    state.entry = formatted;
     state.firstOperand = null;
     state.operator = null;
     state.waitingForSecondOperand = false;
+    state.justEvaluated = true;
   }
 
   function clearAll(): void {
-    state.display = "0";
+    state.entry = "0";
     state.firstOperand = null;
     state.waitingForSecondOperand = false;
     state.operator = null;
+    state.lastEquation = null;
+    state.justEvaluated = false;
   }
 
   function backspace(): void {
-    if (state.waitingForSecondOperand) return;
-    state.display = state.display.length > 1 ? state.display.slice(0, -1) : "0";
+    if (state.waitingForSecondOperand || state.justEvaluated) return;
+    state.entry = state.entry.length > 1 ? state.entry.slice(0, -1) : "0";
   }
 
   function toggleSign(): void {
-    if (state.display === "0" || state.display === "Error") return;
-    state.display = state.display.startsWith("-")
-      ? state.display.slice(1)
-      : "-" + state.display;
+    if (state.entry === "0" || state.entry === "Error") return;
+    state.entry = state.entry.startsWith("-")
+      ? state.entry.slice(1)
+      : "-" + state.entry;
   }
 
   function percentage(): void {
-    state.display = formatResult(parseFloat(state.display) / 100);
+    state.entry = formatResult(parseFloat(state.entry) / 100);
     state.waitingForSecondOperand = false;
+    state.justEvaluated = false;
   }
 
   function isOperator(value: string): value is Operator {

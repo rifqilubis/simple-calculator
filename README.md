@@ -1,6 +1,10 @@
 # Simple Calculator
 
+[![CI](https://github.com/rifqilubis/simple-calculator/actions/workflows/ci.yml/badge.svg)](https://github.com/rifqilubis/simple-calculator/actions/workflows/ci.yml)
+
 A simple, dependency-free calculator website written in TypeScript.
+
+**▶ [Live demo](https://rifqilubis.github.io/simple-calculator/)**
 
 ## Features
 
@@ -17,12 +21,13 @@ A simple, dependency-free calculator website written in TypeScript.
 ## Project structure
 
 ```
-index.html          Markup + keypad
-style.css           Styling
-src/calculator.ts   Application logic (TypeScript source)
-dist/calculator.js  Compiled output (generated)
-tsconfig.json       TypeScript configuration (strict mode)
-serve.js            Optional zero-dependency local dev server
+index.html              Markup + keypad
+style.css               Styling
+src/calculator.ts       Application logic (TypeScript source)
+dist/calculator.js      Compiled output (generated)
+tsconfig.json           TypeScript configuration (strict mode)
+serve.js                Optional zero-dependency local dev server
+.github/workflows/ci.yml  CI: type-check + dist/ freshness check
 ```
 
 ## Getting started

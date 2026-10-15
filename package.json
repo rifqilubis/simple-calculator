@@ -8,6 +8,6 @@
     "start": "tsc && start index.html"
   },
   "devDependencies": {
-    "typescript": "^5.6.0"
+    "typescript": "6.0.3"
   }
 }
